@@ -33,10 +33,7 @@ function calculatePart2(input: Input) {
 }
 
 function sort(arr: number[], rules: Record<number, Set<number>>): number[] {
-  const arrCopy = arr.slice();
-  arrCopy.sort((a, b) => rules[a]?.has(b) ? -1 : 1);
-
-  return arrCopy;
+  return arr.slice().sort((a, b) => rules[a]?.has(b) ? -1 : 1);
 }
 
 function mid(arr: number[]): number {
@@ -57,16 +54,11 @@ function eq(a: number[], b: number[]): boolean {
 
 function parse(input: string): Input {
   const [rules, pages] = input.split('\n\n');
-  const rulesMap: Record<number, Set<number>> = {};
-  for (const rule of rules.split('\n')) {
-    const [l, r] = rule.split('|').map(v => +v);
-    if (!rulesMap[l]) {
-      rulesMap[l] = new Set();
-    }
-    rulesMap[l].add(r);
-  }
+  const m: Record<number, Set<number>> = {};
+  rules.split('\n').map(l => l.split('|').map(v => +v))
+    .forEach(([l ,r]) => m[l] ? m[l].add(r) : m[l] = new Set([r]));
   return {
-    rules: rulesMap,
+    rules: m,
     pages: pages.split('\n').map(l => l.split(',').map(v => +v))
   }
 }
