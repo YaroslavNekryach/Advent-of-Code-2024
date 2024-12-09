@@ -19,14 +19,6 @@ class PosSet {
     return false
   }
 
-  has(pos: Pos): boolean {
-    return this.set.has(this.ser(pos));
-  }
-
-  delete(pos: Pos): boolean {
-    return this.set.delete(this.ser(pos));
-  }
-
   get size(): number {
     return this.set.size;
   }
@@ -39,12 +31,6 @@ class PosSet {
   private ser(pos: Pos): string {
     return `${pos[0]}_${pos[1]}`
   }
-
-  private de(s: string): Pos {
-    const [x, y] = s.split('_').map(q => +q);
-    return [x, y];
-  }
-
 }
 
 tests();
