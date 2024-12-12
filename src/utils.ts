@@ -145,6 +145,14 @@ export abstract class AbstractSet<T> {
     this.set.add(this.ser(v));
   }
 
+  has(v: T): boolean   {
+    return this.set.has(this.ser(v));
+  }
+
+  delete(v: T) {
+    return this.set.delete(this.ser(v));
+  }
+
   values(): T[] {
     return [...this.set].map(v=> this.de(v));
   }
@@ -157,7 +165,7 @@ export abstract class AbstractSet<T> {
   protected abstract de(s: string): T;
 }
 
-class PosSet extends AbstractSet<Pos>{
+export class PosSet extends AbstractSet<Pos>{
 
   protected ser(pos: Pos): string {
     return pos.ser();
