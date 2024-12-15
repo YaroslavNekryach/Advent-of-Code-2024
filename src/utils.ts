@@ -1,5 +1,10 @@
 export class Pos {
 
+  static readonly UP = new Pos(0, -1);
+  static readonly DOWN = new Pos(0, 1);
+  static readonly LEFT = new Pos(-1, 0);
+  static readonly RIGHT = new Pos(1, 0);
+
   constructor(public x: number, public y: number) {
   }
 
@@ -12,37 +17,52 @@ export class Pos {
     return new Pos(+x, +y)
   }
 
+  add(pos: Pos): Pos {
+    return new Pos(this.x + pos.x, this.y + pos.y);
+  }
+
+  addMut(pos: Pos): Pos {
+    this.x += pos.x;
+    this.y += pos.y;
+    return this
+  }
+
   up(): Pos {
-    return new Pos(this.x, this.y - 1)
+    return this.add(Pos.UP);
   }
 
   down(): Pos {
-    return new Pos(this.x, this.y + 1)
+    return this.add(Pos.DOWN);
   }
 
   left(): Pos {
-    return new Pos(this.x - 1, this.y)
+    return this.add(Pos.LEFT);
   }
 
   right(): Pos {
-    return new Pos(this.x + 1, this.y)
+    return this.add(Pos.RIGHT);
   }
 
-  mutUp() {
-    this.y--;
+  mutUp(): Pos {
+    return this.addMut(Pos.UP);
   }
 
-  mutDown() {
-    this.y++;
+  mutDown(): Pos {
+    return this.addMut(Pos.DOWN);
   }
 
-  mutLeft() {
-    this.x--;
+  mutLeft(): Pos {
+    return this.add(Pos.LEFT);
   }
 
-  mutRight() {
-    this.x++;
+  mutRight(): Pos {
+    return this.addMut(Pos.RIGHT);
   }
+
+  eq(p: Pos): boolean {
+    return this.x === p.x && this.y === p.y;
+  }
+
 
   getNear4(): Pos[] {
     return [this.up(), this.down(), this.left(), this.right()]
@@ -64,7 +84,7 @@ export class Pos {
 }
 
 export class Map<T> {
-  private map: T[][];
+  public map: T[][];
   readonly width: number;
   readonly height: number;
 
@@ -136,6 +156,10 @@ export class Map<T> {
       }
     }
   }
+
+  log() {
+    console.log(this.map.map(r => r.join('')).join('\n'));
+  }
 }
 
 export abstract class AbstractSet<T> {
@@ -173,4 +197,12 @@ export class PosSet extends AbstractSet<Pos>{
   protected de(s: string): Pos {
     return Pos.de(s);
   }
+}
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function clearConsole() {
+  process.stdout.write('\x1B[2J\x1B[3J\x1B[H');
 }
