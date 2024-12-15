@@ -23,7 +23,7 @@ const MOVES: Record<DirKey, Pos> = {
 
 type Input = { map: Map<string>, moves: DirKey[] };
 
-// tests();
+tests();
 run().then(([result1, result2]) => {
   console.log('Part 1:', result1);
   console.log('Part 2:', result2);
@@ -62,7 +62,7 @@ function canMove(map: Map<string>, pos: Pos, dir: Pos): boolean {
     }
   }
 
-  return move(map, pos.add(dir), dir);
+  return canMove(map, pos.add(dir), dir);
 }
 
 
@@ -127,9 +127,6 @@ function calculatePart2(input: Input) {
     if (move2(map, robotPos, dir)) {
       robotPos.addMut(dir);
     }
-    // clearConsole();
-    // map.log();
-    // await sleep(20);
   }
   for (const [pos, value] of map) {
     if (value === BOX_L) {
