@@ -1,5 +1,5 @@
 import {getInput, getTestFunction} from './helper';
-import {clearConsole, Map, Pos, sleep} from './utils';
+import {Map, Pos, PosSet} from './utils';
 
 const DAY = 15;
 
@@ -10,7 +10,6 @@ const EMPTY = '.';
 
 const BOX_L = '[';
 const BOX_R = ']';
-
 
 type DirKey = '<' | '^' | '>' | 'v';
 
@@ -29,111 +28,47 @@ run().then(([result1, result2]) => {
   console.log('Part 2:', result2);
 });
 
-function move(map: Map<string>, pos: Pos, dir: Pos): boolean {
+function getMovingBoxes(map: Map<string>, pos: Pos, dir: Pos, boxes: PosSet = new PosSet()): PosSet {
   const v = map.get(pos)!;
-  if (v === EMPTY) {
-    return true
+  if (v === EMPTY) return boxes;
+  if (v === WALL) throw new Error('WALL!!!');
+  boxes.add(pos);
+  getMovingBoxes(map, pos.add(dir), dir, boxes);
+  if ((dir.eq(Pos.UP) || dir.eq(Pos.DOWN)) && (v === BOX_L || v === BOX_R)) {
+    const opPos = v === BOX_R ? pos.add(Pos.LEFT) : pos.add(Pos.RIGHT);
+    if (!boxes.has(opPos)) {
+      getMovingBoxes(map, opPos, dir, boxes);
+    }
   }
-  if (v === WALL) {
-    return false
-  }
-  if (move(map, pos.add(dir), dir)) {
-    map.set(pos, EMPTY);
-    map.set(pos.add(dir), v);
-    return true
-  }
-  return false;
+  return boxes;
 }
 
-function canMove(map: Map<string>, pos: Pos, dir: Pos): boolean {
-  const v = map.get(pos)!;
-  if (v === EMPTY) {
-    return true
+function moveBoxes(map: Map<string>, boxes: PosSet, dir: Pos) {
+  const vPoses: Record<string, PosSet> = {};
+  for (const box of boxes) {
+    const v = map.get(box)!;
+    vPoses[v] ??= new PosSet();
+    vPoses[v].add(box.add(dir));
+    map.set(box, EMPTY);
   }
-  if (v === WALL) {
-    return false
-  }
-  if ((dir.eq(Pos.UP) || dir.eq(Pos.DOWN))) {
-    if (v === BOX_L) {
-      return canMove(map, pos.add(dir), dir) && canMove(map, pos.add(Pos.RIGHT).add(dir), dir);
-    }
-    if (v === BOX_R) {
-      return canMove(map, pos.add(dir), dir) && canMove(map, pos.add(Pos.LEFT).add(dir), dir);
+  for (const [v, poses] of Object.entries(vPoses)) {
+    for (const pos of poses) {
+      map.set(pos, v);
     }
   }
-
-  return canMove(map, pos.add(dir), dir);
-}
-
-
-function move2(map: Map<string>, pos: Pos, dir: Pos, b = false): boolean {
-  const v = map.get(pos)!;
-  if (v === EMPTY) {
-    return true
-  }
-  if (v === WALL) {
-    return false
-  }
-  if ((v === BOX_L || v === BOX_R) && (dir.eq(Pos.UP) || dir.eq(Pos.DOWN))) {
-    if (canMove(map, pos, dir)) {
-      let opSymbol = BOX_R;
-      let opPos = pos.add(Pos.RIGHT);
-      if (v === BOX_R) {
-        opSymbol = BOX_L;
-        opPos = pos.add(Pos.LEFT);
-      }
-        move2(map, pos.add(dir), dir);
-        move2(map, opPos.add(dir), dir);
-        map.set(pos, EMPTY);
-        map.set(opPos, EMPTY);
-        map.set(pos.add(dir), v);
-        map.set(opPos.add(dir), opSymbol);
-
-      return true;
-    } else {
-      return false
-    }
-  } else if (move2(map, pos.add(dir), dir)) {
-    map.set(pos, EMPTY);
-    map.set(pos.add(dir), v);
-    return true
-  }
-  return false;
 }
 
 function calculatePart1({map, moves}: Input) {
-  let result = 0;
-  const robotPos: Pos = findRobotPos(map);
+  let robotPos: Pos = findRobotPos(map);
   for (const m of moves) {
-    const dir = MOVES[m];
-    if (move(map, robotPos, dir)) {
-      robotPos.addMut(dir);
-    }
+    robotPos = tryMove(map, robotPos, MOVES[m]);
   }
-  for (const [pos, value] of map) {
-    if (value === BOX) {
-      result += pos.x + pos.y * 100;
-    }
-  }
-  return result;
+  return calculateResult(map);
 }
 
 function calculatePart2(input: Input) {
-  let result = 0;
   const map = resizeMap(input.map);
-  const robotPos: Pos = findRobotPos(map);
-  for (const m of input.moves) {
-    const dir = MOVES[m];
-    if (move2(map, robotPos, dir)) {
-      robotPos.addMut(dir);
-    }
-  }
-  for (const [pos, value] of map) {
-    if (value === BOX_L) {
-      result += pos.x + pos.y * 100;
-    }
-  }
-  return result;
+  return calculatePart1({map, moves: input.moves})
 }
 
 function findRobotPos(map: Map<string>): Pos {
@@ -145,16 +80,31 @@ function findRobotPos(map: Map<string>): Pos {
   throw new Error('Robot not found');
 }
 
+function tryMove(map: Map<string>, pos: Pos, dir: Pos): Pos {
+  try {
+    const boxes = getMovingBoxes(map, pos, dir);
+    moveBoxes(map, boxes, dir);
+    return pos.add(dir);
+  } catch (e) {
+    return pos;
+  }
+}
+
+function calculateResult(map: Map<string>) {
+  let result = 0;
+  for (const [pos, value] of map) {
+    if (value === BOX || value === BOX_L) {
+      result += pos.x + pos.y * 100;
+    }
+  }
+  return result;
+}
+
 function resizeMap(map: Map<string>): Map<string> {
   return new Map(map.map.map(l => l.flatMap(v => {
-    switch (v) {
-      case BOX:
-        return [BOX_L, BOX_R]
-      case ROBOT:
-        return [ROBOT, EMPTY]
-      default:
-        return [v, v]
-    }
+    if (v === BOX) return [BOX_L, BOX_R];
+    if (v === ROBOT) return [ROBOT, EMPTY];
+    return [v, v]
   })))
 }
 

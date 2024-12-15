@@ -181,6 +181,12 @@ export abstract class AbstractSet<T> {
     return [...this.set].map(v=> this.de(v));
   }
 
+  *[Symbol.iterator](): Generator<T> {
+    for (const v of this.set) {
+      yield this.de(v);
+    }
+  }
+
   get size(): number {
     return this.set.size;
   }
