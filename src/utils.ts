@@ -132,7 +132,7 @@ export class Map<T> {
     }
   }
 
-  *pos(): Generator<Pos> {
+  * pos(): Generator<Pos> {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         yield new Pos(x, y);
@@ -140,7 +140,7 @@ export class Map<T> {
     }
   }
 
-  *values(): Generator<T> {
+  * values(): Generator<T> {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         yield this.get(x, y)!;
@@ -148,7 +148,7 @@ export class Map<T> {
     }
   }
 
-  *[Symbol.iterator](): Generator<[Pos, T]> {
+  * [Symbol.iterator](): Generator<[Pos, T]> {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         const pos = new Pos(x, y)
@@ -160,6 +160,10 @@ export class Map<T> {
   log() {
     console.log(this.map.map(r => r.join('')).join('\n'));
   }
+
+  logNumber(pad = 6) {
+    console.log(this.map.map(r => r.map(v => (v as number).toString().padStart(pad, '0')).join(' ')).join('\n'));
+  }
 }
 
 export abstract class AbstractSet<T> {
@@ -167,9 +171,10 @@ export abstract class AbstractSet<T> {
 
   add(v: T) {
     this.set.add(this.ser(v));
+    return this;
   }
 
-  has(v: T): boolean   {
+  has(v: T): boolean {
     return this.set.has(this.ser(v));
   }
 
@@ -178,10 +183,10 @@ export abstract class AbstractSet<T> {
   }
 
   values(): T[] {
-    return [...this.set].map(v=> this.de(v));
+    return [...this.set].map(v => this.de(v));
   }
 
-  *[Symbol.iterator](): Generator<T> {
+  * [Symbol.iterator](): Generator<T> {
     for (const v of this.set) {
       yield this.de(v);
     }
@@ -191,15 +196,29 @@ export abstract class AbstractSet<T> {
     return this.set.size;
   }
 
+  clone(): PosSet {
+    const newPosSet = new PosSet();
+    newPosSet.set = new Set(this.set);
+    return newPosSet;
+  }
+
+  merge(set: PosSet) {
+    set.set.forEach((v: string) => {
+      this.set.add(v)
+    });
+  }
+
   protected abstract ser(v: T): string;
+
   protected abstract de(s: string): T;
 }
 
-export class PosSet extends AbstractSet<Pos>{
+export class PosSet extends AbstractSet<Pos> {
 
   protected ser(pos: Pos): string {
     return pos.ser();
   }
+
   protected de(s: string): Pos {
     return Pos.de(s);
   }
