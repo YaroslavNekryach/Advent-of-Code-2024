@@ -28,10 +28,7 @@ function calculatePart2(input: Input) {
   return result;
 }
 
-function patternCount(patterns: string[], design: string, cache: Record<string, number> = {}): number {
-  if (design === '') {
-    return 1;
-  }
+function patternCount(patterns: string[], design: string, cache: Record<string, number> = {'': 1}): number {
   if (cache[design] != null) {
     return cache[design];
   }

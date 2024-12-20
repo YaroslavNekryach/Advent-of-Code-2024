@@ -17,6 +17,10 @@ export class Pos {
     return new Pos(+x, +y)
   }
 
+  dist(pos: Pos): number {
+    return Math.abs(this.x - pos.x) + Math.abs(this.y - pos.y);
+  }
+
   add(pos: Pos): Pos {
     return new Pos(this.x + pos.x, this.y + pos.y);
   }
@@ -79,6 +83,20 @@ export class Pos {
       this.down(),
       new Pos(this.x + 1, this.y + 1),
     ]
+  }
+
+  getNear(n: number): PosSet {
+    if (n === 0) {
+      return new PosSet();
+    }
+    const set = new PosSet();
+    for (let x = -n; x <= n; x++) {
+      const y = n - Math.abs(x);
+      set.add(this.add(new Pos(x, y)));
+      set.add(this.add(new Pos(x, -y)));
+    }
+    set.merge(this.getNear(n - 1))
+    return set;
   }
 
 }
